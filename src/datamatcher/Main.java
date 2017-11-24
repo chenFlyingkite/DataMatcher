@@ -1,6 +1,7 @@
 package datamatcher;
 
-import datamatcher.solve.LCSJoin;
+import datamatcher.solve.Basics;
+import datamatcher.solve.lcsjoin.LCSJoin;
 import datamatcher.util.TicTac;
 import datamatcher.util.Util;
 
@@ -12,8 +13,8 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        log("Hello World!!");
-
+        //log("Hello World!!");
+        Basics.deleteLogFile();
         TicTac.tic();
         //readFile("D:\\YSData\\data\\SDC.csv");
         new LCSJoin().solve(null);
