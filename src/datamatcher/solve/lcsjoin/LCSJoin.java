@@ -1,6 +1,7 @@
 package datamatcher.solve.lcsjoin;
 
 import datamatcher.algorithm.LCSString;
+import datamatcher.algorithm.LevenshteinDistance;
 import datamatcher.solve.Basics;
 import datamatcher.solve.CSVTable;
 import datamatcher.solve.OutputPack;
@@ -18,6 +19,7 @@ public class LCSJoin extends Basics {
 
     private static LCSInput input = LCSInput.get();
     private static final String outPath = input.folderPath + input.outputPath;
+    private static final String similar = input.folderPath + input.similarPath;
     private static final String nomatch = input.folderPath + input.mismatchPath;
 
     private static final String sdcPath = input.folderPath + input.sdc.csvName;
@@ -38,16 +40,18 @@ public class LCSJoin extends Basics {
         List<Map<String, String>> dsMaps = dsTable.data;
 
         List<Map<String, String>> joinMaps = new ArrayList<>();
+        final int size = sdcMaps.size();
         // The mapping: i -> mapping[i] = ds column #i
-        int[] mappings = new int[sdcMaps.size()];
+        int[] mappings = new int[size];
         // The map key: i -> keys[i]
-        String[] keys = new String[sdcMaps.size()];
+        String[] keys = new String[size];
         // LCS Index : i -> (sdc's index, ds's index)
-        int[][] lcsIndices = new int[sdcMaps.size()][2];
+        int[][] lcsIndices = new int[size][2];
+        int[][] levDist = new int[size][2];
 
         int perfect = 0;
         boolean logDetail = true;
-        for (int i = 0; i < sdcMaps.size(); i++) {
+        for (int i = 0; i < size; i++) {
             Map<String, String> map = sdcMaps.get(i);
             String src = normalizeSDC(map.get(SDC_COLUMN));
             String srcLcs = "";
@@ -81,22 +85,30 @@ public class LCSJoin extends Basics {
             lcsIndices[i][1] = dstGood.indexOf(srcLcs);
             if (lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0) {
                 perfect++;
+            } else {
+                levDist[i][0] = LevenshteinDistance.get(srcLcs, src);
+                levDist[i][1] = LevenshteinDistance.get(srcLcs, dstGood);
             }
             if (logDetail) {
                 log("got at #%s as /%s/", mappings[i], srcLcs);
             }
         }
         log("End with %s", Arrays.toString(mappings));
-        log("Perfect = %s -> %.3f", perfect, 1F * perfect / sdcMaps.size());
+        log("Perfect = %s -> %.3f", perfect, 1F * perfect / size);
 
         tt.tic();
         openLogFile();
-        logFile("");
         for (int i = 0; i < mappings.length; i++) {
-            logFile("  sdc >> %s\n   ds -> %s\n  lcs => %s\n  : %s & %s\n"
-                    , sdcMaps.get(i).get(LINE), dsMaps.get(mappings[i]).get(LINE)
-                    , keys[i], lcsIndices[i][0], lcsIndices[i][1]
-            );
+            String pf = "x";
+            if (lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0) {
+                pf = "o";
+            }
+            logFile(""); // New line
+            logFile("  sdc >> %s", sdcMaps.get(i).get(LINE));
+            logFile("   ds -> %s", dsMaps.get(mappings[i]).get(LINE));
+            logFile("  lcs => %s", keys[i]);
+            logFile("  perfect = %s, idx = %s & %s", pf, lcsIndices[i][0], lcsIndices[i][1]);
+            logFile("  lev dist = %s & %s", levDist[i][0], levDist[i][1]);
         }
         closeLogFile();
         tt.tac("Writelog file OK");
@@ -105,32 +117,45 @@ public class LCSJoin extends Basics {
 
         tt.tic();
         OutputPack out = new OutputPack(outPath);
+        OutputPack sim = new OutputPack(similar);
         OutputPack mis = new OutputPack(nomatch);
         OutputPack pack;
 
-        out.delete();
-        out.open(true);
-        out.writeln("%s,LCS Key,LCS,LCS Value,%s", sdcTable.header, dsTable.header);
+        OutputPack[] all = {out, sim, mis};
 
-        mis.delete();
-        mis.open(true);
-        mis.writeln("%s,LCS Key,LCS,LCS Value,%s", sdcTable.header, dsTable.header);
+        for (OutputPack op : all) {
+            op.delete();
+            op.open(true);
+            op.writeln("%s,LCS Key,LevDis Key,LCS,LevDis Value,LCS Value,%s", sdcTable.header, dsTable.header);
+        }
+
         for (int i = 0; i < mappings.length; i++) {
             int key = mappings[i];
-            if (lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0) {
+            boolean same = lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0;
+
+            int max = 4, diff = 3;
+            boolean simi = levDist[i][0] < max && levDist[i][1] < max
+                    && Math.abs(levDist[i][0] - levDist[i][1]) < diff;
+            if (same) {
                 pack = out;
+            } else if (simi) {
+                pack = sim;
             } else {
                 pack = mis;
             }
-            pack.writeln("%s,%s,%s,%s,%s"
+            pack.writeln("%s,%s,%s,%s,%s,%s,%s"
                     , sdcMaps.get(i).get(LINE)
                     , sdcMaps.get(i).get(SDC_COLUMN)
+                    , levDist[i][0]
                     , keys[i]
+                    , levDist[i][1]
                     , dsMaps.get(key).get(DS_COLUMN)
                     , dsMaps.get(key).get(LINE)
             );
         }
-        out.close();
+        for (OutputPack op : all) {
+            op.close();
+        }
         tt.tac("Output File OK");
         log("CSV File created: %s", outPath);
     }

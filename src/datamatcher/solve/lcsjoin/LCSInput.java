@@ -9,7 +9,7 @@ public class LCSInput {
     public static final LCSInput ERIC_DATA = new LCSInput(
             //"D:\\YSData\\data\\",
             "F:\\GitHub\\DataMatcher\\data\\",
-            "output.csv", "misMatch.csv",
+            "output.csv", "maybe.csv", "misMatch.csv",
             new CSVInput("SDC.csv", "Issuer" // # = 1107 rows
                 , new String[]{" International" // # 33
                     , " Industrial" // # = 46
@@ -51,14 +51,17 @@ public class LCSInput {
 
     public final String folderPath;
     public final String outputPath;
+    public final String similarPath;
     public final String mismatchPath;
     public final CSVInput sdc;
     public final CSVInput ds;
 
-    public LCSInput(String path, String outputName, String mismatchName
+    public LCSInput(String path, String outputName
+            , String similarName, String mismatchName
             , CSVInput sdcInput, CSVInput dsInput) {
         folderPath = path;
         outputPath = outputName;
+        similarPath = similarName;
         mismatchPath = mismatchName;
         sdc = sdcInput;
         ds = dsInput;

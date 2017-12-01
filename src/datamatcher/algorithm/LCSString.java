@@ -1,7 +1,5 @@
 package datamatcher.algorithm;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * This is an implementation, in Java, of the Longest Common Subsequence algorithm.
  * That is, given two strings A and B, this program will find the longest sequence
@@ -23,7 +21,7 @@ public class LCSString {
     private static final int LEFT        = 2;
     private static final int UP_AND_LEFT = 3;
 
-    public static String LCSAlgorithm(@NotNull String a, @NotNull String b) {
+    public static String LCSAlgorithm(String a, String b) {
         int n = a.length();
         int m = b.length();
         int[][] S = new int[n+1][m+1];
