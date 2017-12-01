@@ -19,6 +19,7 @@ public class LCSInput {
                     , " Co Ltd" // # = 404
                     , " Corp" // # = 290
                     , " Electronic" // #= 17
+                    , "\\x2E" // = .
                     , " "}),
             new CSVInput("DataStream.csv", "Full Name" // # = 2592
                 , new String[]{" International" // # = 184
@@ -32,8 +33,17 @@ public class LCSInput {
                     , " Industrial" // # 176
                     , " (Taiwan)" // # = 16
                     , " Company" // # = 48
+                    , "\\x2E" // = .
                     , " "})
     );
+    // The replaced text is in regular expression
+    // https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+
+    // ASCII Table and Description
+    // http://www.asciitable.com/
+
+    // edit distance
+    // https://en.wikipedia.org/wiki/Levenshtein_distance
 
     public static LCSInput get() {
         return ERIC_DATA;

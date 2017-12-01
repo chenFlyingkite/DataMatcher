@@ -41,11 +41,15 @@ public class LCSJoin extends Basics {
         int[] mappings = new int[sdcMaps.size()];
         // The map key: i -> keys[i]
         String[] keys = new String[sdcMaps.size()];
+        // LCS Index : i -> (sdc's index, ds's index)
+        int[][] lcsIndices = new int[sdcMaps.size()][2];
+
         boolean logDetail = true;
         for (int i = 0; i < sdcMaps.size(); i++) {
             Map<String, String> map = sdcMaps.get(i);
             String src = normalizeSDC(map.get(SDC_COLUMN));
             String srcLcs = "";
+            String dstGood = "";
             int max = 0;
             mappings[i] = -1;
             if (logDetail) {
@@ -67,8 +71,11 @@ public class LCSJoin extends Basics {
                     max = s.length();
                     mappings[i] = j;
                     keys[i] = s;
+                    dstGood = dst;
                 }
             }
+            lcsIndices[i][0] = src.indexOf(srcLcs);
+            lcsIndices[i][1] = dstGood.indexOf(srcLcs);
             if (logDetail) {
                 log("got at #%s as /%s/", mappings[i], srcLcs);
             }
@@ -79,9 +86,9 @@ public class LCSJoin extends Basics {
         openLogFile();
         logFile("");
         for (int i = 0; i < mappings.length; i++) {
-            logFile("  sdc >> %s\n   ds -> %s\n  lcs => %s\n"
+            logFile("  sdc >> %s\n   ds -> %s\n  lcs => %s\n  : %s & %s\n"
                     , sdcMaps.get(i).get(LINE), dsMaps.get(mappings[i]).get(LINE)
-                    , keys[i]
+                    , keys[i], lcsIndices[i][0], lcsIndices[i][1]
             );
         }
         closeLogFile();
