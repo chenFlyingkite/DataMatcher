@@ -15,12 +15,17 @@ public class Basics {
         return false;
     }
 
+    protected static boolean saveLog = false;
+
     public static void log(String format, Object... param) {
-        System.out.println(String.format(Locale.US, format, param));
+        log(String.format(Locale.US, format, param));
     }
 
     public static void log(String msg) {
         System.out.println(msg);
+        if (saveLog) {
+            logFile(msg);
+        }
     }
 
     private static String logFile = LCSInput.get().folderPath + "log.txt";

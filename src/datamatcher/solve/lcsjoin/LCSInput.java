@@ -7,15 +7,32 @@ import java.util.Comparator;
 
 public class LCSInput {
     public static final LCSInput ERIC_DATA = new LCSInput(
-            "D:\\YSData\\data\\", "output.csv",
-            "SDC.csv", "Issuer",
-            "DataStream.csv", "Full Name",
-            new String[]{"international", "corp", "co ltd", " "},
-            new String[]{"international", "corp"
-                    , "Conversion Certificate"
-                    , "Year of Conversion"
-                    , "co ltd"
-                    , " "}
+            //"D:\\YSData\\data\\",
+            "F:\\GitHub\\DataMatcher\\data\\",
+            "output.csv", "misMatch.csv",
+            new CSVInput("SDC.csv", "Issuer" // # = 1107 rows
+                , new String[]{" International" // # 33
+                    , " Industrial" // # = 46
+                    , " Technology" // # = 174
+                    , " Inc" // # = 184
+                    , " Ltd" // # = 459
+                    , " Co Ltd" // # = 404
+                    , " Corp" // # = 290
+                    , " Electronic" // #= 17
+                    , " "}),
+            new CSVInput("DataStream.csv", "Full Name" // # = 2592
+                , new String[]{" International" // # = 184
+                    , " Technology" // # = 784
+                    , " Corporation" // # = 28
+                    , " Limited" // # = 15
+                    , " Industry" // # = 80
+                    , " Conversion Certificate" // # = 24
+                    , " First Year of Conversion" // # = 11
+                    , " Second Year of Conversion" // # = 5
+                    , " Industrial" // # 176
+                    , " (Taiwan)" // # = 16
+                    , " Company" // # = 48
+                    , " "})
     );
 
     public static LCSInput get() {
@@ -23,38 +40,33 @@ public class LCSInput {
     }
 
     public final String folderPath;
-    public final String outFile;
-    public final String sdcFile;
-    /** Case sensitive */
-    public final String SDC_COLUMN;
+    public final String outputPath;
+    public final String mismatchPath;
+    public final CSVInput sdc;
+    public final CSVInput ds;
 
-    public final String dsFile;
-    /** Case sensitive */
-    public final String DS_COLUMN;
-    public final Erase sdcErase;
-    public final Erase dsErase;
-
-    public LCSInput(String path, String outputName
-            , String sdcName, String sdcCol, String dsName, String dsCol
-            , String[] sdcErased, String[] dsErased) {
+    public LCSInput(String path, String outputName, String mismatchName
+            , CSVInput sdcInput, CSVInput dsInput) {
         folderPath = path;
-        outFile = outputName;
-        sdcFile = sdcName;
-        SDC_COLUMN = sdcCol;
-        dsFile = dsName;
-        DS_COLUMN = dsCol;
-        sdcErase = new Erase(sdcErased);
-        dsErase = new Erase(dsErased);
+        outputPath = outputName;
+        mismatchPath = mismatchName;
+        sdc = sdcInput;
+        ds = dsInput;
     }
 
-    public static class Erase {
+    public static class CSVInput {
+        public final String csvName;
+        /** Case sensitive */
+        public final String keyColumn;
         public final String[] keywords;
 
-        public Erase(String[] words) {
-            if (words == null) {
+        public CSVInput(String name, String column, String[] erased) {
+            csvName = name;
+            keyColumn = column;
+            if (erased == null) {
                 keywords = null;
             } else {
-                Arrays.sort(words, new Comparator<String>() {
+                Arrays.sort(erased, new Comparator<String>() {
                     @Override
                     public int compare(String o1, String o2) {
                         int n = o1.length();
@@ -62,11 +74,12 @@ public class LCSInput {
                         return Integer.compare(m, n);
                     }
                 });
-                keywords = new String[words.length];
-                for (int i = 0; i < words.length; i++) {
-                    keywords[i] = words[i].toLowerCase();
+                keywords = new String[erased.length];
+                for (int i = 0; i < erased.length; i++) {
+                    keywords[i] = erased[i].toLowerCase();
                 }
-                Basics.log("Erase keywords = %s", Arrays.toString(keywords));
+                Basics.log("CSVInput name = %s\n  keywords = %s"
+                        , name, Arrays.toString(keywords));
             }
         }
     }

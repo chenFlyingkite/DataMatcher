@@ -5,6 +5,7 @@ import datamatcher.solve.Basics;
 import datamatcher.solve.CSVTable;
 import datamatcher.solve.OutputPack;
 import datamatcher.util.TicTac;
+import datamatcher.util.TicTac2;
 import datamatcher.util.Util;
 
 import java.io.File;
@@ -16,14 +17,18 @@ public class LCSJoin extends Basics {
     private static final String LINE = "line";
 
     private static LCSInput input = LCSInput.get();
-    private static final String outPath = input.folderPath + input.outFile;
+    private static final String outPath = input.folderPath + input.outputPath;
 
-    private static final String sdcPath = input.folderPath + input.sdcFile;
-    private static final String dsPath = input.folderPath + input.dsFile;
-    private static final String SDC_COLUMN = input.SDC_COLUMN;
-    private static final String DS_COLUMN = input.DS_COLUMN;
+    private static final String sdcPath = input.folderPath + input.sdc.csvName;
+    private static final String dsPath = input.folderPath + input.ds.csvName;
+    private static final String SDC_COLUMN = input.sdc.keyColumn.toLowerCase();
+    private static final String DS_COLUMN = input.ds.keyColumn.toLowerCase();
+
+    // performance profiling
+    private TicTac2 tt = new TicTac2();
 
     public void solve(String[] args) {
+        tt.reset();
         CSVTable sdcTable = readTable(sdcPath);
 
         CSVTable dsTable = readTable(dsPath);
@@ -36,13 +41,16 @@ public class LCSJoin extends Basics {
         int[] mappings = new int[sdcMaps.size()];
         // The map key: i -> keys[i]
         String[] keys = new String[sdcMaps.size()];
+        boolean logDetail = true;
         for (int i = 0; i < sdcMaps.size(); i++) {
             Map<String, String> map = sdcMaps.get(i);
             String src = normalizeSDC(map.get(SDC_COLUMN));
             String srcLcs = "";
             int max = 0;
             mappings[i] = -1;
-            log("  find #%s for /%s/", i, src);
+            if (logDetail) {
+                log("  find #%s for /%s/", i, src);
+            }
             for (int j = 0; j < dsMaps.size(); j++) {
                 Map<String, String> dsMap = dsMaps.get(j);
                 String dst = normalizeDS(dsMap.get(DS_COLUMN));
@@ -61,21 +69,29 @@ public class LCSJoin extends Basics {
                     keys[i] = s;
                 }
             }
-            log("got at #%s as /%s/", mappings[i], srcLcs);
+            if (logDetail) {
+                log("got at #%s as /%s/", mappings[i], srcLcs);
+            }
         }
         log("End with %s", Arrays.toString(mappings));
+
+        tt.tic();
         openLogFile();
+        logFile("");
         for (int i = 0; i < mappings.length; i++) {
-            logFile("%s\n      -> %s\n  => %s\n"
+            logFile("  sdc >> %s\n   ds -> %s\n  lcs => %s\n"
                     , sdcMaps.get(i).get(LINE), dsMaps.get(mappings[i]).get(LINE)
                     , keys[i]
             );
         }
         closeLogFile();
+        tt.tac("Writelog file OK");
 
         log("---------------");
 
+        tt.tic();
         OutputPack out = new OutputPack(outPath);
+        out.delete();
         out.open(true);
         out.writeln("%s,LCS Key,LCS,LCS Value,%s", sdcTable.header, dsTable.header);
         for (int i = 0; i < mappings.length; i++) {
@@ -89,18 +105,21 @@ public class LCSJoin extends Basics {
             );
         }
         out.close();
+        tt.tac("Output File OK");
         log("CSV File created: %s", outPath);
     }
 
     private String normalizeSDC(String from) {
-        String s = normalize(from, input.sdcErase.keywords);
-        s = s.substring(0, Math.min(s.length(), 10));
+        int max = 15;
+        String s = normalize(from, input.sdc.keywords);
+        s = s.substring(0, Math.min(s.length(), max));
         return s;
     }
 
     private String normalizeDS(String from) {
-        String s = normalize(from, input.dsErase.keywords);
-        s = s.substring(0, Math.min(s.length(), 10));
+        int max = 15;
+        String s = normalize(from, input.ds.keywords);
+        s = s.substring(0, Math.min(s.length(), max));
         return s;
     }
 
@@ -116,14 +135,23 @@ public class LCSJoin extends Basics {
         return result;
     }
 
-    private static CSVTable readTable(String path) {
+    private CSVTable readTable(String path) {
+        saveLog = true;
+        openLogFile();
+        long tic = System.currentTimeMillis();
         TicTac.tic();
+
         CSVTable table = readFile(path);
+
         TicTac.tac("File OK, %s rows read <- %s", table.data.size(), path);
+        long tac = System.currentTimeMillis();
+        logFile("[%s] : File OK, %s rows read <- %s", tac - tic, table.data.size(), path);
+        closeLogFile();
+        saveLog = false;
         return table;
     }
 
-    private static CSVTable readFile(String path) {
+    private CSVTable readFile(String path) {
         CSVTable table = new CSVTable();
         List<Map<String, String>> data = new ArrayList<>();
         if (missingFile(path)) {
@@ -170,7 +198,7 @@ public class LCSJoin extends Basics {
 
                     // Put the parsed columns
                     for (int i = 0; i < col; i++) {
-                        m.put(columns[i], lines[i]);
+                        m.put(columns[i].toLowerCase(), lines[i]);
                     }
                     data.add(m);
                 }

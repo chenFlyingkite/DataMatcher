@@ -31,6 +31,10 @@ public class TicTac2 {
         logTac(sb.toString());
     }
 
+    public void reset() {
+        tictac.clear();
+    }
+
     protected static void logError(long tac,String msg) {
         String time = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(new Date(tac));
         System.out.println("X_X Omitted. tic = N/A, tac = " + time + " : " + msg);
