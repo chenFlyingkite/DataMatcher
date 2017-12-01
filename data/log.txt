@@ -1,5 +1,5 @@
-[47] : File OK, 1107 rows read <- F:\GitHub\DataMatcher\data\SDC.csv
-[47] : File OK, 2592 rows read <- F:\GitHub\DataMatcher\data\DataStream.csv
+[63] : File OK, 1107 rows read <- F:\GitHub\DataMatcher\data\SDC.csv
+[50] : File OK, 2592 rows read <- F:\GitHub\DataMatcher\data\DataStream.csv
 
   sdc >> Visual Photonics Epitaxy,2002/1/5,2002/1/5,,2455,3674
    ds -> Visual Photonics Epitaxy,VISUAL PHOTONICS EPITAXY,TW:VPH,2002/1/24,15136W,T2455,TW0002455003

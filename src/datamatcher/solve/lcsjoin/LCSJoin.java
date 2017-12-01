@@ -18,6 +18,7 @@ public class LCSJoin extends Basics {
 
     private static LCSInput input = LCSInput.get();
     private static final String outPath = input.folderPath + input.outputPath;
+    private static final String nomatch = input.folderPath + input.mismatchPath;
 
     private static final String sdcPath = input.folderPath + input.sdc.csvName;
     private static final String dsPath = input.folderPath + input.ds.csvName;
@@ -44,6 +45,7 @@ public class LCSJoin extends Basics {
         // LCS Index : i -> (sdc's index, ds's index)
         int[][] lcsIndices = new int[sdcMaps.size()][2];
 
+        int perfect = 0;
         boolean logDetail = true;
         for (int i = 0; i < sdcMaps.size(); i++) {
             Map<String, String> map = sdcMaps.get(i);
@@ -74,13 +76,18 @@ public class LCSJoin extends Basics {
                     dstGood = dst;
                 }
             }
+
             lcsIndices[i][0] = src.indexOf(srcLcs);
             lcsIndices[i][1] = dstGood.indexOf(srcLcs);
+            if (lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0) {
+                perfect++;
+            }
             if (logDetail) {
                 log("got at #%s as /%s/", mappings[i], srcLcs);
             }
         }
         log("End with %s", Arrays.toString(mappings));
+        log("Perfect = %s -> %.3f", perfect, 1F * perfect / sdcMaps.size());
 
         tt.tic();
         openLogFile();
@@ -98,12 +105,24 @@ public class LCSJoin extends Basics {
 
         tt.tic();
         OutputPack out = new OutputPack(outPath);
+        OutputPack mis = new OutputPack(nomatch);
+        OutputPack pack;
+
         out.delete();
         out.open(true);
         out.writeln("%s,LCS Key,LCS,LCS Value,%s", sdcTable.header, dsTable.header);
+
+        mis.delete();
+        mis.open(true);
+        mis.writeln("%s,LCS Key,LCS,LCS Value,%s", sdcTable.header, dsTable.header);
         for (int i = 0; i < mappings.length; i++) {
             int key = mappings[i];
-            out.writeln("%s,%s,%s,%s,%s"
+            if (lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0) {
+                pack = out;
+            } else {
+                pack = mis;
+            }
+            pack.writeln("%s,%s,%s,%s,%s"
                     , sdcMaps.get(i).get(LINE)
                     , sdcMaps.get(i).get(SDC_COLUMN)
                     , keys[i]
