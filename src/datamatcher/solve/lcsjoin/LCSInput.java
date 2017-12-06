@@ -1,16 +1,17 @@
 package datamatcher.solve.lcsjoin;
 
-import datamatcher.solve.Basics;
+import util.logging.L;
+import util.logging.LF;
 
 import java.util.Arrays;
 import java.util.Comparator;
 
 public class LCSInput {
     public static final LCSInput ERIC_DATA = new LCSInput(
-            //"D:\\YSData\\data\\",
-            "F:\\GitHub\\DataMatcher\\data\\",
+            "D:\\YSData\\20171203\\HK2\\",
+            //"F:\\GitHub\\DataMatcher\\data\\",
             "output.csv", "maybe.csv", "misMatch.csv",
-            new CSVInput("SDC.csv", "Issuer" // # = 1107 rows
+            new CSVInput("SDC_HK.csv", "Issuer" // # = 1107 rows
                 , new String[]{" International" // # 33
                     , " Industrial" // # = 46
                     , " Technology" // # = 174
@@ -21,7 +22,7 @@ public class LCSInput {
                     , " Electronic" // #= 17
                     , "\\x2E" // = .
                     , " "}),
-            new CSVInput("DataStream.csv", "Full Name" // # = 2592
+            new CSVInput("DataStream_HK.csv", "Full Name" // # = 2592
                 , new String[]{" International" // # = 184
                     , " Technology" // # = 784
                     , " Corporation" // # = 28
@@ -48,6 +49,8 @@ public class LCSInput {
     public static LCSInput get() {
         return ERIC_DATA;
     }
+
+    public static final LF logFile = new LF(LCSInput.get().folderPath);
 
     public final String folderPath;
     public final String outputPath;
@@ -91,8 +94,7 @@ public class LCSInput {
                 for (int i = 0; i < erased.length; i++) {
                     keywords[i] = erased[i].toLowerCase();
                 }
-                Basics.log("CSVInput name = %s\n  keywords = %s"
-                        , name, Arrays.toString(keywords));
+                L.log("CSVInput name = %s\n  keywords = %s", name, Arrays.toString(keywords));
             }
         }
     }

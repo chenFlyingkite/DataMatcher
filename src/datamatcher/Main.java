@@ -1,9 +1,9 @@
 package datamatcher;
 
-import datamatcher.solve.Basics;
+import datamatcher.solve.lcsjoin.LCSInput;
 import datamatcher.solve.lcsjoin.LCSJoin;
-import datamatcher.util.TicTac;
-import datamatcher.util.Util;
+import util.tool.IOUtil;
+import util.tool.TicTac;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,8 +13,7 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        //log("Hello World!!");
-        Basics.deleteLogFile();
+        LCSInput.logFile.getFile().delete();
         TicTac.tic();
         //readFile("D:\\YSData\\data\\SDC.csv");
         new LCSJoin().solve(null);
@@ -46,7 +45,7 @@ public class Main {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
-            Util.closeIt(fis);
+            IOUtil.closeIt(fis);
         }
 
     }

@@ -1,4 +1,6 @@
-package datamatcher.util;
+package util.tool;
+
+import util.logging.L;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -11,7 +13,7 @@ public class TicTac2 {
         tictac.push(System.currentTimeMillis());
     }
 
-    public void tacF(String format, Object... params) {
+    public void tac(String format, Object... params) {
         tac(String.format(format, params));
     }
 
@@ -35,13 +37,15 @@ public class TicTac2 {
         tictac.clear();
     }
 
-    protected static void logError(long tac,String msg) {
-        String time = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(new Date(tac));
-        System.out.println("X_X Omitted. tic = N/A, tac = " + time + " : " + msg);
+    protected void logError(long tac, String msg) {
+        L.log("X_X Omitted. tic = N/A, tac = %s : %s", getTime(tac), msg);
     }
 
-    protected static void logTac(String msg) {
-        System.out.println(msg);
+    protected void logTac(String msg) {
+        L.log(msg);
+    }
+
+    protected String getTime(long time) {
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(new Date(time));
     }
 }
-

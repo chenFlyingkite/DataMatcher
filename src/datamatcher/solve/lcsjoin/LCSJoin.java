@@ -2,20 +2,19 @@ package datamatcher.solve.lcsjoin;
 
 import datamatcher.algorithm.LCSString;
 import datamatcher.algorithm.LevenshteinDistance;
-import datamatcher.solve.Basics;
-import datamatcher.solve.CSVTable;
-import datamatcher.solve.OutputPack;
-import datamatcher.util.TicTac;
-import datamatcher.util.TicTac2;
-import datamatcher.util.Util;
+import util.files.CSVTable;
+import util.logging.FileOutput;
+import util.logging.L;
+import util.logging.LF;
+import util.tool.TicTac2;
+import util.tool.TicTacLF;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-public class LCSJoin extends Basics {
-    private static final String COMMA = ",";
-    private static final String LINE = "line";
+public class LCSJoin {
 
     private static LCSInput input = LCSInput.get();
     private static final String outPath = input.folderPath + input.outputPath;
@@ -59,7 +58,7 @@ public class LCSJoin extends Basics {
             int max = 0;
             mappings[i] = -1;
             if (logDetail) {
-                log("  find #%s for /%s/", i, src);
+                L.log("  find #%s for /%s/", i, src);
             }
             for (int j = 0; j < dsMaps.size(); j++) {
                 Map<String, String> dsMap = dsMaps.get(j);
@@ -90,40 +89,43 @@ public class LCSJoin extends Basics {
                 levDist[i][1] = LevenshteinDistance.get(srcLcs, dstGood);
             }
             if (logDetail) {
-                log("got at #%s as /%s/", mappings[i], srcLcs);
+                L.log("got at #%s as /%s/", mappings[i], srcLcs);
             }
         }
-        log("End with %s", Arrays.toString(mappings));
-        log("Perfect = %s -> %.3f", perfect, 1F * perfect / size);
+        LF lf = LCSInput.logFile;
+        FileOutput outLog = LCSInput.logFile.getFile();
+        outLog.open(true);
+
+        lf.log("End with %s", Arrays.toString(mappings));
+        lf.log("Perfect = %s -> %.3f", perfect, 1F * perfect / size);
 
         tt.tic();
-        openLogFile();
         for (int i = 0; i < mappings.length; i++) {
             String pf = "x";
             if (lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0) {
                 pf = "o";
             }
-            logFile(""); // New line
-            logFile("  sdc >> %s", sdcMaps.get(i).get(LINE));
-            logFile("   ds -> %s", dsMaps.get(mappings[i]).get(LINE));
-            logFile("  lcs => %s", keys[i]);
-            logFile("  perfect = %s, idx = %s & %s", pf, lcsIndices[i][0], lcsIndices[i][1]);
-            logFile("  lev dist = %s & %s", levDist[i][0], levDist[i][1]);
+            outLog.writeln(""); // New line
+            outLog.writeln("  sdc >> %s", sdcMaps.get(i).get(CSVTable.LINE));
+            outLog.writeln("   ds -> %s", dsMaps.get(mappings[i]).get(CSVTable.LINE));
+            outLog.writeln("  lcs => %s", keys[i]);
+            outLog.writeln("  perfect = %s, idx = %s & %s", pf, lcsIndices[i][0], lcsIndices[i][1]);
+            outLog.writeln("  lev dist = %s & %s", levDist[i][0], levDist[i][1]);
         }
-        closeLogFile();
+        outLog.close();
         tt.tac("Writelog file OK");
 
-        log("---------------");
+        L.log("---------------");
 
         tt.tic();
-        OutputPack out = new OutputPack(outPath);
-        OutputPack sim = new OutputPack(similar);
-        OutputPack mis = new OutputPack(nomatch);
-        OutputPack pack;
+        FileOutput out = new FileOutput(outPath);
+        FileOutput sim = new FileOutput(similar);
+        FileOutput mis = new FileOutput(nomatch);
+        FileOutput pack;
 
-        OutputPack[] all = {out, sim, mis};
+        FileOutput[] all = {out, sim, mis};
 
-        for (OutputPack op : all) {
+        for (FileOutput op : all) {
             op.delete();
             op.open(true);
             op.writeln("%s,LCS Key,LevDis Key,LCS,LevDis Value,LCS Value,%s", sdcTable.header, dsTable.header);
@@ -144,20 +146,20 @@ public class LCSJoin extends Basics {
                 pack = mis;
             }
             pack.writeln("%s,%s,%s,%s,%s,%s,%s"
-                    , sdcMaps.get(i).get(LINE)
+                    , sdcMaps.get(i).get(CSVTable.LINE)
                     , sdcMaps.get(i).get(SDC_COLUMN)
                     , levDist[i][0]
                     , keys[i]
                     , levDist[i][1]
                     , dsMaps.get(key).get(DS_COLUMN)
-                    , dsMaps.get(key).get(LINE)
+                    , dsMaps.get(key).get(CSVTable.LINE)
             );
         }
-        for (OutputPack op : all) {
+        for (FileOutput op : all) {
             op.close();
         }
         tt.tac("Output File OK");
-        log("CSV File created: %s", outPath);
+        L.log("CSV File created: %s", outPath);
     }
 
     private String normalizeSDC(String from) {
@@ -187,80 +189,11 @@ public class LCSJoin extends Basics {
     }
 
     private CSVTable readTable(String path) {
-        saveLog = true;
-        openLogFile();
-        long tic = System.currentTimeMillis();
-        TicTac.tic();
-
-        CSVTable table = readFile(path);
-
-        TicTac.tac("File OK, %s rows read <- %s", table.data.size(), path);
-        long tac = System.currentTimeMillis();
-        logFile("[%s] : File OK, %s rows read <- %s", tac - tic, table.data.size(), path);
-        closeLogFile();
-        saveLog = false;
-        return table;
-    }
-
-    private CSVTable readFile(String path) {
-        CSVTable table = new CSVTable();
-        List<Map<String, String>> data = new ArrayList<>();
-        if (missingFile(path)) {
-            log("File not found: %s", path);
-            return table;
-        }
-
-        File f = new File(path);
-        Scanner fis = null;
-        try {
-            fis = new Scanner(f);
-            String line;
-            String[] lines;
-
-            String[] columns = null;
-            int col = 0;
-            int ln = 0;
-            // Read header as columns
-            if (fis.hasNextLine()) {
-                ln++;
-                line = fis.nextLine();
-                lines = line.split(COMMA);
-                if (lines.length == 0) {
-                    log("Missing header columns, omit file");
-                    return table;
-                }
-                columns = lines;
-                col = columns.length;
-                table.header = line;
-            }
-
-            while (fis.hasNextLine()) {
-                ln++;
-                line = fis.nextLine();
-                lines = line.split(COMMA);
-                if (lines.length > 0) {
-                    Map<String, String> m = new HashMap<>();
-                    m.put(LINE, line);
-                    if (lines.length != col) {
-                        log("Bad data at line #%s, missing columns\n  %s columns expected:\n  %s", ln, col, line);
-                        table.data = data;
-                        return table;
-                    }
-
-                    // Put the parsed columns
-                    for (int i = 0; i < col; i++) {
-                        m.put(columns[i].toLowerCase(), lines[i]);
-                    }
-                    data.add(m);
-                }
-            }
-            table.data = data;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            Util.closeIt(fis);
-        }
-
+        LF f = LCSInput.logFile;
+        TicTacLF tt = new TicTacLF(f);
+        tt.tic();
+        CSVTable table = CSVTable.readCSVFile(path, f);
+        tt.tac("Read %s rows in %s", table.data.size(), path);
         return table;
     }
 }
