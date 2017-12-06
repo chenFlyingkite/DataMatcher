@@ -180,6 +180,12 @@ public class LCSJoin {
     private String normalize(String from, String[] list) {
         String result = from.toLowerCase();
 
+        // 0x26 = '&', 0x28 = '(', 0x29 = ')'
+        String[] toSpaces = {"\\x26", "\\x28", "\\x29"};
+        for (String s : toSpaces) {
+            result = result.replaceAll(s, " ");
+        }
+
         if (list != null) {
             for (String x : list) {
                 result = result.replaceAll(x, "");

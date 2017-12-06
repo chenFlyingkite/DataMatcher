@@ -8,33 +8,42 @@ import java.util.Comparator;
 
 public class LCSInput {
     public static final LCSInput ERIC_DATA = new LCSInput(
-            "D:\\YSData\\20171203\\HK2\\",
+            "D:\\YSData\\20171203\\HK2\\part1\\",
             //"F:\\GitHub\\DataMatcher\\data\\",
             "output.csv", "maybe.csv", "misMatch.csv",
-            new CSVInput("SDC_HK.csv", "Issuer" // # = 1107 rows
-                , new String[]{" International" // # 33
-                    , " Industrial" // # = 46
-                    , " Technology" // # = 174
-                    , " Inc" // # = 184
-                    , " Ltd" // # = 459
-                    , " Co Ltd" // # = 404
-                    , " Corp" // # = 290
-                    , " Electronic" // #= 17
-                    , "\\x2E" // = .
+            new CSVInput("SDC_HK.csv", "Issuer" // # = 1098 rows
+                , new String[]{" ltd" // # 839
+                    , " holding" // # = 346 (holdings) + # 21 = (holding)
+                    , " co ltd" // # = 185 => "co"
+                    , " group" // # = 173
+                    , " intl" // # = 150
+                    , " hldg" // # = 141 (hldg) + # 74 (hldgs)
+                    , " china" // # = 137
+                    , " international" // # = 81
+                    , " grp" // # = 38
+                    , " corp" // # = 33
+                    , " tech" // # = 33
+                    , "\\x26" // # = 29 &
+                    , " hong kong" // # = 20 (hong), # = 13 (kong)
+                    , " technology" // #= 18
+                    , "\\x28" // = (
+                    , "\\x29" // = )
                     , " "}),
-            new CSVInput("DataStream_HK.csv", "Full Name" // # = 2592
-                , new String[]{" International" // # = 184
-                    , " Technology" // # = 784
-                    , " Corporation" // # = 28
-                    , " Limited" // # = 15
-                    , " Industry" // # = 80
-                    , " Conversion Certificate" // # = 24
-                    , " First Year of Conversion" // # = 11
-                    , " Second Year of Conversion" // # = 5
-                    , " Industrial" // # 176
-                    , " (Taiwan)" // # = 16
-                    , " Company" // # = 48
-                    , "\\x2E" // = .
+            new CSVInput("DataStream_HK.csv", "Full Name" // # = 2303
+                    , new String[]{" holdings" // # 1054 (holdings) & # 55 = (holding)
+                    , " group" // # = 503
+                    , " international" // # = 391
+                    , " china" // # = 350
+                    , " technology" // # = 84
+                    , " temp" // # = 79  => "(Temp)"
+                    , " hong kong" // # = 72 (hong), # = 70 (kong)
+                    , " company" // #= 71
+                    , " energy" // #= 67
+                    , " and" // #= 61
+                    , " development" // #= 57
+                    , " investment" // #= 56
+                    , "\\x28" // = (
+                    , "\\x29" // = )
                     , " "})
     );
     // The replaced text is in regular expression
