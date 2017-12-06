@@ -1,7 +1,9 @@
 package util.files;
 
 import util.logging.L;
+import util.logging.LF;
 import util.tool.IOUtil;
+import util.tool.TicTacLF;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,6 +26,14 @@ public class CSVTable {
 
     public static CSVTable readCSVFile(String path) {
         return readCSVFile(path, L.getImpl());
+    }
+
+    public static CSVTable readCSVFile_logPerformance(String path, LF lf) {
+        TicTacLF tt = new TicTacLF(lf);
+        tt.tic();
+        CSVTable table = readCSVFile(path, lf);
+        tt.tac("Read %s rows in %s", table.data.size(), path);
+        return table;
     }
 
     public static CSVTable readCSVFile(String path, OnReadCSV onRead) {

@@ -1,9 +1,9 @@
 package datamatcher;
 
-import datamatcher.solve.lcsjoin.LCSInput;
-import datamatcher.solve.lcsjoin.LCSJoin;
+import datamatcher.solve.WordCount;
 import util.tool.IOUtil;
 import util.tool.TicTac;
+import util.tool.TicTac2;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,10 +13,15 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        LCSInput.logFile.getFile().delete();
+        TicTac2 tt = new TicTac2();
         TicTac.tic();
-        //readFile("D:\\YSData\\data\\SDC.csv");
-        new LCSJoin().solve(null);
+        //new LCSJoin().solve(null);
+        tt.tic();
+        WordCount.solve("D:\\YSData\\20171203\\HK2\\", "SDC_HK.csv", "ISSUER", "SDC_HK_name.csv");
+        tt.tac("Part 1 OK");
+        tt.tic();
+        WordCount.solve("D:\\YSData\\20171203\\HK2\\", "Datastream_HK.csv", "Full Name", "Datastream_HK_name.csv");
+        tt.tac("Part 2 OK");
         TicTac.tac("Solved");
 
     }

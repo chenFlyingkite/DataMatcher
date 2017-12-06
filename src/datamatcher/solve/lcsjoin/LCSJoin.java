@@ -30,6 +30,7 @@ public class LCSJoin {
     private TicTac2 tt = new TicTac2();
 
     public void solve(String[] args) {
+        LCSInput.logFile.getFile().delete();
         tt.reset();
         CSVTable sdcTable = readTable(sdcPath);
 
@@ -113,7 +114,7 @@ public class LCSJoin {
             outLog.writeln("  lev dist = %s & %s", levDist[i][0], levDist[i][1]);
         }
         outLog.close();
-        tt.tac("Writelog file OK");
+        tt.tac("Write log file OK");
 
         L.log("---------------");
 

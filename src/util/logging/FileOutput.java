@@ -15,7 +15,15 @@ public class FileOutput {
 
     public FileOutput(String name) {
         file = new File(name);
+        validate();
+    }
 
+    public FileOutput(File file1) {
+        file = file1;
+        validate();
+    }
+
+    private void validate() {
         if (file.exists() && file.isDirectory()) {
             file.delete();
         }
