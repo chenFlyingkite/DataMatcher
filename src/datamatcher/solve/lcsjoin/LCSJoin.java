@@ -9,10 +9,7 @@ import util.logging.LF;
 import util.tool.TicTac2;
 import util.tool.TicTacLF;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LCSJoin {
 
@@ -25,6 +22,11 @@ public class LCSJoin {
     private static final String dsPath = input.folderPath + input.ds.csvName;
     private static final String SDC_COLUMN = input.sdc.keyColumn.toLowerCase();
     private static final String DS_COLUMN = input.ds.keyColumn.toLowerCase();
+    private static final String idInDS = "LOC Off. code".toLowerCase();
+    private static final String idInSDC = "ticker".toLowerCase();
+    private static final String idDateInDS = "Start Date".toLowerCase();
+    private static final String idDateInSDC = "idate".toLowerCase();
+
 
     // performance profiling
     private TicTac2 tt = new TicTac2();
@@ -48,6 +50,9 @@ public class LCSJoin {
         // LCS Index : i -> (sdc's index, ds's index)
         int[][] lcsIndices = new int[size][2];
         int[][] levDist = new int[size][2];
+        // SDC.Ticker == DataStream.Loc OFF Code
+        boolean[] sameTicker = new boolean[size];
+        boolean[][] sameDate = new boolean[size][2]; // [0] = same, [1] = <= 40 day
 
         int perfect = 0;
         boolean logDetail = true;
@@ -89,6 +94,35 @@ public class LCSJoin {
                 levDist[i][0] = LevenshteinDistance.get(srcLcs, src);
                 levDist[i][1] = LevenshteinDistance.get(srcLcs, dstGood);
             }
+
+            Map<String, String> dsData = dsMaps.get(mappings[i]);
+            // Evaluate Ticker
+            String sdcTicker = map.get(idInSDC);
+            String dsLocCode = dsData.get(idInDS);
+            if (dsLocCode.length() <= 2) {
+                sameTicker[i] = false;
+            } else {
+                sameTicker[i] = dsLocCode.substring(2).equals(sdcTicker);
+            }
+
+            String[] times;
+            int[] ymd = new int[3];
+            // SDC.IDate
+            times = map.get(idDateInSDC).split("/");
+            for (int j = 0; j < ymd.length; j++) {
+                ymd[j] = Integer.parseInt(times[j]);
+            }
+            Date sdcDate = new Date(ymd[0], ymd[1], ymd[2]);
+            // DS.StartDate
+            times = dsData.get(idDateInDS).split("/");
+            for (int j = 0; j < ymd.length; j++) {
+                ymd[j] = Integer.parseInt(times[j]);
+            }
+            Date dsStartDate = new Date(ymd[0], ymd[1], ymd[2]);
+            long timeDiff = sdcDate.getTime() - dsStartDate.getTime();
+            sameDate[i][0] = timeDiff == 0;
+            sameDate[i][1] = Math.abs(timeDiff) / (24 * 60 * 60 * 1000) <= 40;
+
             if (logDetail) {
                 L.log("got at #%s as /%s/", mappings[i], srcLcs);
             }
@@ -112,6 +146,8 @@ public class LCSJoin {
             outLog.writeln("  lcs => %s", keys[i]);
             outLog.writeln("  perfect = %s, idx = %s & %s", pf, lcsIndices[i][0], lcsIndices[i][1]);
             outLog.writeln("  lev dist = %s & %s", levDist[i][0], levDist[i][1]);
+            outLog.writeln("  %s : ticker, code = %s & %s", sameTicker[i] ? "o" :"x", sdcMaps.get(i).get(idInSDC), dsMaps.get(mappings[i]).get(idInDS));
+            outLog.writeln("  %s : date diff of sdc = %s & ds = %s", sameTicker[i] ? "o" :"x", sdcMaps.get(i).get(idDateInSDC), dsMaps.get(mappings[i]).get(idDateInDS));
         }
         outLog.close();
         tt.tac("Write log file OK");
@@ -129,30 +165,41 @@ public class LCSJoin {
         for (FileOutput op : all) {
             op.delete();
             op.open(true);
-            op.writeln("%s,LCS Key,LevDis Key,LCS,LevDis Value,LCS Value,%s", sdcTable.header, dsTable.header);
+            op.writeln("%s,LCS Key,LevDis Key,LCS,LevDis Value,LCS Value,same Ticker,same date, in 40 day,%s", sdcTable.header, dsTable.header);
         }
 
         for (int i = 0; i < mappings.length; i++) {
             int key = mappings[i];
+            // Indices of LCS >= 0
             boolean same = lcsIndices[i][0] >= 0 && lcsIndices[i][1] >= 0;
 
             int max = 4, diff = 3;
+            // Lev Dist. |Lx - Ly| < diff & Math.max(Lx, Ly) < max
             boolean simi = levDist[i][0] < max && levDist[i][1] < max
                     && Math.abs(levDist[i][0] - levDist[i][1]) < diff;
+
+
             if (same) {
                 pack = out;
-            } else if (simi) {
-                pack = sim;
             } else {
-                pack = mis;
+                if (sameTicker[i]) {
+                    pack = out;
+                } else if (sameDate[i][0] || sameDate[i][1]) {
+                    pack = out;
+                } else {
+                    pack = mis;
+                }
             }
-            pack.writeln("%s,%s,%s,%s,%s,%s,%s"
+            pack.writeln("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
                     , sdcMaps.get(i).get(CSVTable.LINE)
                     , sdcMaps.get(i).get(SDC_COLUMN)
                     , levDist[i][0]
                     , keys[i]
                     , levDist[i][1]
                     , dsMaps.get(key).get(DS_COLUMN)
+                    , sameTicker[i] ? "_" : "x"
+                    , sameDate[i][0] ? "_" : "x"
+                    , sameDate[i][1] ? "_" : "x"
                     , dsMaps.get(key).get(CSVTable.LINE)
             );
         }
