@@ -8,11 +8,43 @@ import java.util.Comparator;
 
 public class LCSInput {
     public static final LCSInput ERIC_DATA = new LCSInput(
+            //"D:\\YSData\\data\\",
+            "F:\\GitHub\\DataMatcher\\data\\",
+            "output.csv", "maybe.csv", "misMatch.csv",
+            new CSVInput("SDC.csv", "Issuer" // # = 1107 rows
+                    , new String[]{" International" // # 33
+                    , " Industrial" // # = 46
+                    , " Technology" // # = 174
+                    , " Inc" // # = 184
+                    , " Ltd" // # = 459
+                    , " Co Ltd" // # = 404
+                    , " Corp" // # = 290
+                    , " Electronic" // #= 17
+                    , "\\x2E" // = .
+                    , " "}),
+            new CSVInput("DataStream.csv", "Full Name" // # = 2592
+                    , new String[]{" International" // # = 184
+                    , " Technology" // # = 784
+                    , " Corporation" // # = 28
+                    , " Limited" // # = 15
+                    , " Industry" // # = 80
+                    , " Conversion Certificate" // # = 24
+                    , " First Year of Conversion" // # = 11
+                    , " Second Year of Conversion" // # = 5
+                    , " Industrial" // # 176
+                    , " (Taiwan)" // # = 16
+                    , " Company" // # = 48
+                    , "\\x2E" // = .
+                    , " "})
+    );
+
+
+    public static final LCSInput HONG_KONG_DATA = new LCSInput(
             "D:\\YSData\\20171203\\HK2\\part1\\",
             //"F:\\GitHub\\DataMatcher\\data\\",
             "output.csv", "maybe.csv", "misMatch.csv",
             new CSVInput("SDC_HK.csv", "Issuer" // # = 1098 rows
-                , new String[]{" ltd" // # 839
+                    , new String[]{" ltd" // # 839
                     , " holding" // # = 346 (holdings) + # 21 = (holding)
                     , " co ltd" // # = 185 => "co"
                     , " group" // # = 173
