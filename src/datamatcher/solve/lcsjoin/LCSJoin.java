@@ -99,10 +99,11 @@ public class LCSJoin {
             // Evaluate Ticker
             String sdcTicker = map.get(idInSDC);
             String dsLocCode = dsData.get(idInDS);
-            if (dsLocCode.length() <= 2) {
+            int prefix = input == LCSInput.ERIC_DATA ? 1 : 2; // HK = 2
+            if (dsLocCode.equalsIgnoreCase("NA")) {
                 sameTicker[i] = false;
             } else {
-                sameTicker[i] = dsLocCode.substring(2).equals(sdcTicker);
+                sameTicker[i] = dsLocCode.substring(prefix).equals(sdcTicker);
             }
 
             String[] times;
@@ -112,13 +113,13 @@ public class LCSJoin {
             for (int j = 0; j < ymd.length; j++) {
                 ymd[j] = Integer.parseInt(times[j]);
             }
-            Date sdcDate = new Date(ymd[0], ymd[1], ymd[2]);
+            Date sdcDate = new Date(ymd[0] - 1900, ymd[1] - 1, ymd[2]);
             // DS.StartDate
             times = dsData.get(idDateInDS).split("/");
             for (int j = 0; j < ymd.length; j++) {
                 ymd[j] = Integer.parseInt(times[j]);
             }
-            Date dsStartDate = new Date(ymd[0], ymd[1], ymd[2]);
+            Date dsStartDate = new Date(ymd[0] - 1900, ymd[1] - 1, ymd[2]);
             long timeDiff = sdcDate.getTime() - dsStartDate.getTime();
             sameDate[i][0] = timeDiff == 0;
             sameDate[i][1] = Math.abs(timeDiff) / (24 * 60 * 60 * 1000) <= 40;
@@ -147,7 +148,7 @@ public class LCSJoin {
             outLog.writeln("  perfect = %s, idx = %s & %s", pf, lcsIndices[i][0], lcsIndices[i][1]);
             outLog.writeln("  lev dist = %s & %s", levDist[i][0], levDist[i][1]);
             outLog.writeln("  %s : ticker, code = %s & %s", sameTicker[i] ? "o" :"x", sdcMaps.get(i).get(idInSDC), dsMaps.get(mappings[i]).get(idInDS));
-            outLog.writeln("  %s : date diff of sdc = %s & ds = %s", sameTicker[i] ? "o" :"x", sdcMaps.get(i).get(idDateInSDC), dsMaps.get(mappings[i]).get(idDateInDS));
+            outLog.writeln("  %s : date diff of sdc = %s & ds = %s", sameDate[i][1] ? "o" :"x", sdcMaps.get(i).get(idDateInSDC), dsMaps.get(mappings[i]).get(idDateInDS));
         }
         outLog.close();
         tt.tac("Write log file OK");

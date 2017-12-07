@@ -38,7 +38,6 @@ public class LCSInput {
                     , " "})
     );
 
-
     public static final LCSInput HONG_KONG_DATA = new LCSInput(
             "D:\\YSData\\20171203\\HK2\\part1\\",
             //"F:\\GitHub\\DataMatcher\\data\\",
@@ -88,7 +87,7 @@ public class LCSInput {
     // https://en.wikipedia.org/wiki/Levenshtein_distance
 
     public static LCSInput get() {
-        return ERIC_DATA;
+        return HONG_KONG_DATA;
     }
 
     public static final LF logFile = new LF(LCSInput.get().folderPath);
